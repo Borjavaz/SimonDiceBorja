@@ -1,0 +1,2 @@
+- Haz los mensajes en "español"
+- Escribe siempre un mensaje corto y despues una descripción máis extensa
