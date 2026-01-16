@@ -1,5 +1,6 @@
 package gz.dam.simondice
 
+
 /**
  * Clase sellada que representa todos los estados posibles del juego
  */

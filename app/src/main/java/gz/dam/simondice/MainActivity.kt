@@ -1,6 +1,5 @@
 package gz.dam.simondice
 
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,14 +9,17 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import gz.dam.simondice.ui.theme.SimonDiceTheme
 
-
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             SimonDiceTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // CAMBIO: Pasar el ViewModelFactory al composable
                     val viewModel: VM = viewModel(
                         factory = VMFactory(application)
                     )
@@ -25,5 +27,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

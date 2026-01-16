@@ -1,18 +1,80 @@
 package gz.dam.simondice
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import gz.dam.simondice.ui.theme.SimonBlue
+import gz.dam.simondice.ui.theme.SimonGreen
+import gz.dam.simondice.ui.theme.SimonRed
+import gz.dam.simondice.ui.theme.SimonYellow
+
+// IMPORTACIONES REQUERIDAS DE TU ARCHIVO Color.kt
+import gz.dam.simondice.ui.theme.SimonRedDark
+import gz.dam.simondice.ui.theme.SimonGreenDark
+import gz.dam.simondice.ui.theme.SimonBlueDark
+import gz.dam.simondice.ui.theme.SimonYellowDark
+
 
 /**
- * Clase que almacena los datos del juego de forma simplificada
- * Actúa como un contenedor estático para datos compartidos
+ * Clase que almacena los datos del juego
  */
 object Datos {
-    // Secuencias del juego
+    // Observers para notificar cambios
+    private val observers = mutableListOf<(String) -> Unit>()
+
+    fun addObserver(observer: (String) -> Unit) {
+        observers.add(observer)
+    }
+
+    private fun notifyObservers(event: String) {
+        observers.forEach { it(event) }
+    }
+
+    // Variables de Estado Reactivas
+    private var _ronda by mutableStateOf(0)
+    var ronda: Int
+        get() = _ronda
+        private set(value) {
+            _ronda = value
+            notifyObservers("RONDA_CHANGED")
+        }
+
+    private var _record by mutableStateOf(0)
+    var record: Int
+        get() = _record
+        private set(value) {
+            _record = value
+            notifyObservers("RECORD_CHANGED")
+        }
+
+    private var _gameState by mutableStateOf<GameState>(GameState.Inicio)
+    var gameState: GameState
+        get() = _gameState
+        private set(value) {
+            _gameState = value
+            notifyObservers("GAME_STATE_CHANGED")
+        }
+
+    var text by mutableStateOf("PRESIONA START")
+    var mostrarSecuencia by mutableStateOf(false)
+    var colorActivo by mutableStateOf(-1)
+    var botonesBrillantes by mutableStateOf(false)
+    var jugando by mutableStateOf(false)
+
+    // Secuencias
     var secuencia = mutableListOf<Int>()
     var secuenciaUsuario = mutableListOf<Int>()
 
-    // Función de utilidad para generar números aleatorios
-    fun generarColorAleatorio(): Int = (0..3).random()
+    // FUNCIONES DE ACCESO CONTROLADO
+    fun updateRonda(value: Int) { ronda = value }
+    fun updateRecord(value: Int) { record = value }
+    fun updateGameState(value: GameState) { gameState = value }
+    fun updateText(value: String) { text = value }
+    fun updateMostrarSecuencia(value: Boolean) { mostrarSecuencia = value }
+    fun updateColorActivo(value: Int) { colorActivo = value }
+    fun updateBotonesBrillantes(value: Boolean) { botonesBrillantes = value }
+    fun updateJugando(value: Boolean) { jugando = value }
 
     /**
      * Reinicia el juego al estado inicial
@@ -20,29 +82,14 @@ object Datos {
     fun reiniciarJuego() {
         secuencia.clear()
         secuenciaUsuario.clear()
-    }
-
-    /**
-     * Verifica si la secuencia del usuario es correcta hasta ahora
-     */
-    fun verificarSecuenciaParcial(): Boolean {
-        if (secuenciaUsuario.isEmpty() || secuencia.isEmpty()) return false
-        if (secuenciaUsuario.size > secuencia.size) return false
-
-        for (i in secuenciaUsuario.indices) {
-            if (secuenciaUsuario[i] != secuencia[i]) {
-                return false
-            }
-        }
-        return true
-    }
-
-    /**
-     * Verifica si el usuario completó toda la secuencia correctamente
-     */
-    fun verificarSecuenciaCompleta(): Boolean {
-        if (secuenciaUsuario.size != secuencia.size) return false
-        return verificarSecuenciaParcial()
+        updateRonda(0)
+        updateGameState(GameState.Inicio)
+        updateText("PRESIONA START")
+        updateMostrarSecuencia(false)
+        updateColorActivo(-1)
+        updateBotonesBrillantes(false)
+        updateJugando(false)
+        notifyObservers("GAME_RESET")
     }
 }
 
@@ -53,77 +100,25 @@ enum class Colores(val colorInt: Int, val nombre: String, val tono: String) {
     ROJO(0, "ROJO", "Mi"),
     VERDE(1, "VERDE", "Do"),
     AZUL(2, "AZUL", "Sol"),
-    AMARILLO(3, "AMARILLO", "Do'");
-
-    companion object {
-        /**
-         * Obtiene un color por su valor entero
-         */
-        fun fromInt(value: Int): Colores? {
-            return values().firstOrNull { it.colorInt == value }
-        }
-
-        /**
-         * Obtiene el nombre del color por su valor entero
-         */
-        fun getNombre(value: Int): String {
-            return fromInt(value)?.nombre ?: "DESCONOCIDO"
-        }
-    }
-}
-
-/**
- * Definición de colores para el tema del juego
- * Estos colores deben estar definidos en tu archivo de tema
- */
-object SimonColors {
-    // Colores claros (activos/brillantes)
-    val RedLight = Color(0xFFE53935)      // Rojo brillante
-    val GreenLight = Color(0xFF43A047)    // Verde brillante
-    val BlueLight = Color(0xFF1E88E5)     // Azul brillante
-    val YellowLight = Color(0xFFFDD835)   // Amarillo brillante
-
-    // Colores oscuros (inactivos/apagados)
-    val RedDark = Color(0xFFB71C1C)       // Rojo oscuro
-    val GreenDark = Color(0xFF1B5E20)     // Verde oscuro
-    val BlueDark = Color(0xFF0D47A1)      // Azul oscuro
-    val YellowDark = Color(0xFFF57F17)    // Amarillo oscuro
-
-    // Colores neutrales
-    val Background = Color(0xFF121212)    // Fondo oscuro
-    val TextPrimary = Color(0xFFFFFFFF)   // Texto principal
-    val TextSecondary = Color(0xFFB0B0B0) // Texto secundario
+    AMARILLO(3, "AMARILLO", "Do'")
 }
 
 // Función de extensión para obtener el color base (color CLARO/BRILLANTE, activo)
 fun Colores.baseColor(): Color {
     return when (this) {
-        Colores.ROJO -> SimonColors.RedLight
-        Colores.VERDE -> SimonColors.GreenLight
-        Colores.AZUL -> SimonColors.BlueLight
-        Colores.AMARILLO -> SimonColors.YellowLight
+        Colores.ROJO -> SimonRed
+        Colores.VERDE -> SimonGreen
+        Colores.AZUL -> SimonBlue
+        Colores.AMARILLO -> SimonYellow
     }
 }
 
 // Función de extensión para obtener el color oscurecido (color OSCURO/INACTIVO)
 fun Colores.colorOscurecido(): Color {
     return when (this) {
-        Colores.ROJO -> SimonColors.RedDark
-        Colores.VERDE -> SimonColors.GreenDark
-        Colores.AZUL -> SimonColors.BlueDark
-        Colores.AMARILLO -> SimonColors.YellowDark
-    }
-}
-
-/**
- * Función de utilidad para obtener el color correspondiente a un valor entero
- */
-fun getColorFromInt(colorInt: Int, brillante: Boolean = true): Color {
-    return when (colorInt) {
-        0 -> if (brillante) SimonColors.RedLight else SimonColors.RedDark
-        1 -> if (brillante) SimonColors.GreenLight else SimonColors.GreenDark
-        2 -> if (brillante) SimonColors.BlueLight else SimonColors.BlueDark
-        3 -> if (brillante) SimonColors.YellowLight else SimonColors.YellowDark
-        else -> SimonColors.Background
+        Colores.ROJO -> SimonRedDark
+        Colores.VERDE -> SimonGreenDark
+        Colores.AZUL -> SimonBlueDark
+        Colores.AMARILLO -> SimonYellowDark
     }
 }

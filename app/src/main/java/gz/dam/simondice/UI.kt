@@ -10,13 +10,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun SimonDiceUI(viewModel: VM) {
+    val context = LocalContext.current
+
     // Estados del juego
     val gameState by viewModel.gameState.collectAsState()
     val ronda by viewModel.ronda.collectAsState()
@@ -80,7 +83,6 @@ fun HeaderInfo(
             })
         }
 
-        // Mostrar la fecha del record solo si hay un record guardado
         if (record.ronda > 0) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
