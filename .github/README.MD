@@ -1,4 +1,3 @@
-![RoomApp Logo](../assets/firma.png)
 
 # Configuración de GitHub Copilot para RoomApp
 
