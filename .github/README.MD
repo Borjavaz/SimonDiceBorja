@@ -310,7 +310,7 @@ which bash
 
 ## 👤 Autor
 
-**Profesor Damián Nogueiras**
+**Borja de Saá**
 
 Proxecto educativo desenvolvido para demostrar as mellorador prácticas no desenvolvemento de software con GitHub Copilot.
 
