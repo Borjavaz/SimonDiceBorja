@@ -11,9 +11,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel del juego Simon Dice sin Room Database
+ * ViewModel del juego Simon Dice actualizado para usar Room Database
  */
-class VM(application: Application) : ViewModel() {
+class VM(application: Application, private val recordDao: ScoreDao) : ViewModel() {
 
     // Estados reactivos usando StateFlow para la UI
     private val _gameState = MutableStateFlow<GameState>(GameState.Inicio)
@@ -22,9 +22,9 @@ class VM(application: Application) : ViewModel() {
     private val _ronda = MutableStateFlow(0)
     val ronda: StateFlow<Int> = _ronda.asStateFlow()
 
-    // El record se mantiene solo en memoria
-    private val _record = MutableStateFlow(Record.empty())
-    val record: StateFlow<Record> = _record.asStateFlow()
+    // El record ahora proviene de la base de datos Room
+    private val _record = MutableStateFlow(GameScore.empty())
+    val record: StateFlow<GameScore> = _record.asStateFlow()
 
     private val _text = MutableStateFlow("PRESIONA START")
     val text: StateFlow<String> = _text.asStateFlow()
@@ -52,6 +52,19 @@ class VM(application: Application) : ViewModel() {
     init {
         // Inicializar el estado global de Datos
         Datos.reiniciarJuego()
+        // Cargar el récord más alto desde Room al iniciar el ViewModel
+        cargarRecord()
+    }
+
+    /**
+     * Recupera el récord de la base de datos usando el DAO
+     */
+    private fun cargarRecord() {
+        viewModelScope.launch {
+            // Buscamos el record con la ronda más alta
+            val recordDB = recordDao.getHighScore()
+            _record.value = recordDB ?: GameScore.empty()
+        }
     }
 
     /**
@@ -187,10 +200,12 @@ class VM(application: Application) : ViewModel() {
             _gameState.value = GameState.SecuenciaCorrecta
             _text.value = "¡BIEN! SIGUIENTE RONDA"
 
-            // Lógica de nuevo récord en memoria (sin persistencia)
+            // Lógica de nuevo récord persistido en Room
             if (_ronda.value > _record.value.ronda) {
-                val nuevoRecord = Record(ronda = _ronda.value)
+                val nuevoRecord = GameScore(ronda = _ronda.value)
                 _record.value = nuevoRecord
+                // Insertamos el nuevo récord en la base de datos
+                recordDao.insert(nuevoRecord)
             }
 
             efectoCelebracion()

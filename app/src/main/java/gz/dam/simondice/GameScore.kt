@@ -1,28 +1,23 @@
 package gz.dam.simondice
 
-
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * Clase que representa un récord en memoria (sin persistencia)
- */
-data class Record(
-    val ronda: Int = 0,
+@Entity(tableName = "score_table") // Cambia el nombre de la tabla
+data class GameScore(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val ronda: Int,
     val timestamp: Long = System.currentTimeMillis()
 ) {
-    /**
-     * Obtiene la fecha formateada del récord.
-     */
     fun getFechaFormateada(): String {
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return formatter.format(Date(timestamp))
     }
 
     companion object {
-        /**
-         * Crea un Record vacío.
-         */
-        fun empty(): Record = Record(ronda = 0, timestamp = System.currentTimeMillis())
+        fun empty(): GameScore = GameScore(ronda = 0, timestamp = System.currentTimeMillis())
     }
 }

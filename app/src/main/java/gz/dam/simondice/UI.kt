@@ -1,5 +1,6 @@
 package gz.dam.simondice
 
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 
 @Composable
 fun SimonDiceUI(viewModel: VM) {
@@ -41,7 +41,7 @@ fun SimonDiceUI(viewModel: VM) {
 @Composable
 fun HeaderInfo(
     ronda: Int,
-    record: Record,
+    record: GameScore,
     text: String,
     gameState: GameState
 ) {
