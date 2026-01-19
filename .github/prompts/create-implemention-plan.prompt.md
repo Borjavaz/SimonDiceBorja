@@ -87,7 +87,7 @@ tags: [Opcional: Lista de etiquetas o categorías relevantes, ej., `feature`, `u
 
 [Enumera explícitamente todos los requisitos y restricciones que afectan el plan y cómo se implementa. Usa viñetas o tablas para mayor claridad.]
 
-- **REQ-001**: Requisito 1
+- **REQ-001**: Ten en cuenta que el proyecto tiene que seguir una estructura MVVM
 - **SEC-001**: Requisito de Seguridad 1
 - **[3 LETRAS]-001**: Otro Requisito 1
 - **CON-001**: Restricción 1
