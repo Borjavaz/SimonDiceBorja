@@ -7,7 +7,7 @@ import java.util.*
 /**
  * Clase que representa un récord en memoria (sin persistencia)
  */
-data class Record(
+data class GameRecord(
     val ronda: Int = 0,
     val timestamp: Long = System.currentTimeMillis()
 ) {
@@ -23,6 +23,6 @@ data class Record(
         /**
          * Crea un Record vacío.
          */
-        fun empty(): Record = Record(ronda = 0, timestamp = System.currentTimeMillis())
+        fun empty(): GameRecord = GameRecord(ronda = 0, timestamp = System.currentTimeMillis())
     }
 }

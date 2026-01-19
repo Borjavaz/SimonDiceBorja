@@ -1,5 +1,5 @@
+// [file name]: VM.kt
 package gz.dam.simondice
-
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
@@ -11,7 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel del juego Simon Dice sin Room Database
+ * ViewModel del juego Simon Dice con MongoDB
  */
 class VM(application: Application) : ViewModel() {
 
@@ -22,9 +22,9 @@ class VM(application: Application) : ViewModel() {
     private val _ronda = MutableStateFlow(0)
     val ronda: StateFlow<Int> = _ronda.asStateFlow()
 
-    // El record se mantiene solo en memoria
-    private val _record = MutableStateFlow(Record.empty())
-    val record: StateFlow<Record> = _record.asStateFlow()
+    // El record se mantiene en memoria y se sincroniza con MongoDB
+    private val _record = MutableStateFlow(GameRecord.empty())
+    val record: StateFlow<GameRecord> = _record.asStateFlow()
 
     private val _text = MutableStateFlow("PRESIONA START")
     val text: StateFlow<String> = _text.asStateFlow()
@@ -34,6 +34,9 @@ class VM(application: Application) : ViewModel() {
 
     private val _botonesBrillantes = MutableStateFlow(false)
     val botonesBrillantes: StateFlow<Boolean> = _botonesBrillantes.asStateFlow()
+
+    // MongoDB Manager
+    private val mongoDBManager = MongoDBManager(application)
 
     // Configuración de velocidades de la secuencia
     private val velocidadMostrarColor = 800L
@@ -52,6 +55,31 @@ class VM(application: Application) : ViewModel() {
     init {
         // Inicializar el estado global de Datos
         Datos.reiniciarJuego()
+
+        // Cargar el récord de MongoDB al iniciar
+        viewModelScope.launch {
+            cargarRecordDesdeMongoDB()
+        }
+    }
+
+    /**
+     * Carga el récord desde MongoDB al iniciar la aplicación
+     */
+    private suspend fun cargarRecordDesdeMongoDB() {
+        val recordMongoDB = mongoDBManager.obtenerMejorRecord()
+        recordMongoDB?.let { recordDesdeBD ->
+            // Solo actualizar si el récord de MongoDB es mejor
+            if (recordDesdeBD.ronda > _record.value.ronda) {
+                _record.value = recordDesdeBD
+            }
+        }
+    }
+
+    /**
+     * Guarda el récord actual en MongoDB
+     */
+    private suspend fun guardarRecordEnMongoDB() {
+        mongoDBManager.guardarRecord(_record.value)
     }
 
     /**
@@ -187,10 +215,13 @@ class VM(application: Application) : ViewModel() {
             _gameState.value = GameState.SecuenciaCorrecta
             _text.value = "¡BIEN! SIGUIENTE RONDA"
 
-            // Lógica de nuevo récord en memoria (sin persistencia)
+            // Lógica de nuevo récord
             if (_ronda.value > _record.value.ronda) {
-                val nuevoRecord = Record(ronda = _ronda.value)
+                val nuevoRecord = GameRecord(ronda = _ronda.value)
                 _record.value = nuevoRecord
+
+                // Guardar el nuevo récord en MongoDB
+                guardarRecordEnMongoDB()
             }
 
             efectoCelebracion()
@@ -274,4 +305,29 @@ class VM(application: Application) : ViewModel() {
      * Verifica si es el turno del jugador
      */
     fun esTurnoJugador(): Boolean = _gameState.value == GameState.EsperandoJugador
+
+    /**
+     * Sincroniza manualmente el récord con MongoDB
+     */
+    fun sincronizarConMongoDB() {
+        viewModelScope.launch {
+            _text.value = "Sincronizando récord..."
+            guardarRecordEnMongoDB()
+            delay(1000)
+            _text.value = "RÉCORD: ${_record.value.ronda} - PRESIONA START"
+        }
+    }
+
+    /**
+     * Obtiene el top de récords desde MongoDB
+     */
+    suspend fun obtenerTopRecords(): List<GameRecord> {
+        return mongoDBManager.obtenerTopRecords()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // Cerrar conexión con MongoDB cuando el ViewModel se destruye
+        mongoDBManager.cerrarConexion()
+    }
 }

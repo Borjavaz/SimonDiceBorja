@@ -41,7 +41,7 @@ fun SimonDiceUI(viewModel: VM) {
 @Composable
 fun HeaderInfo(
     ronda: Int,
-    record: Record,
+    record: GameRecord,
     text: String,
     gameState: GameState
 ) {
